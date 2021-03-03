@@ -4,7 +4,7 @@ from aws_cdk import core
 
 from stack import Stack
 
-ENV = core.Environment(account="473883619336", region="eu-central-1")
+ENV = core.Environment(account="473883619336", region="us-east-1")
 
 app = core.App()
 

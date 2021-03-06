@@ -6,6 +6,19 @@ article = core.Article()
 comment = core.Comment()
 
 
+def apply_defaults(handler_fn):
+    def wrapper(*args, **kwargs):
+        resp = handler_fn(*args, **kwargs)
+        if "headers" not in resp:
+            resp["headers"] = {}
+        resp["headers"]["Access-Control-Allow-Origin"] = "*"
+        resp["headers"]["Access-Control-Allow-Methods"] = "*"
+        resp["headers"]["Access-Control-Allow-Headers"] = "*"
+        return resp
+    return wrapper
+
+
+@apply_defaults
 def handler(event, context):
     body = event["body"] if type(event["body"]) is dict else {}
 

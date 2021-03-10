@@ -1,5 +1,6 @@
 import core
 import json
+import urllib.parse
 
 
 article = core.Article()
@@ -20,18 +21,24 @@ def apply_defaults(handler_fn):
 
 @apply_defaults
 def handler(event, context):
-    body = event["body"] if type(event["body"]) is dict else {}
+    body = json.loads(event["body"]) if event["body"] else {}
 
     path = core.parse_path(event["path"])
     if not path:
         return {"statusCode": 404}
 
-    try:
-        core.authenticator.register(body.get("key"))
-    except:
-        core.authenticator.current_user_is_admin = False
+    core.authenticator.register(body.get("key"))
 
     root_resource = path.pop(0)
+
+    #########################################################################
+    # resource: /admin-login
+    #########################################################################
+
+    if root_resource == "admin-login":
+        if core.authenticator.current_user_is_admin:
+            return {"statusCode": 200}
+        return {"statusCode": 400}
 
     #########################################################################
     # resource: /tag
@@ -60,7 +67,6 @@ def handler(event, context):
     #########################################################################
     # resource: /article
     #########################################################################
-    # TODO check for duplicate article title on create/ update
 
     if root_resource != "article":
         return {"statusCode": 404}
@@ -73,8 +79,8 @@ def handler(event, context):
                     body["urlTitle"],
                     body["title"],
                     body["tag"],
-                    body["text"],
-                    body["desc"]
+                    body["content"],
+                    body["description"]
                 )
                 return {"statusCode": 201}
             except PermissionError:
@@ -91,7 +97,7 @@ def handler(event, context):
         }
 
     # specific article
-    # next path element is an article title
+    # next path element is an article url title
     article_url_title = path.pop(0)
 
     if not path:
@@ -102,8 +108,8 @@ def handler(event, context):
                     article_url_title,
                     body["title"],
                     body["tag"],
-                    body["text"],
-                    body["desc"]
+                    body["content"],
+                    body["description"]
                 )
                 return {"statusCode": 200}
             except PermissionError:
@@ -133,7 +139,7 @@ def handler(event, context):
     if not path:
         # create comment
         if event["httpMethod"] == "POST":
-            comment_id = comment.create(article_url_title, body["text"])
+            comment_id = comment.create(article_url_title, body["author"], body["content"])
             return {
                 "statusCode": 201,
                 "body": json.dumps({"id": comment_id})
@@ -151,19 +157,11 @@ def handler(event, context):
 
     # specific comment
     # next path element is the id of a comment
-    comment_id = path.pop(0)
+    comment_id = urllib.parse.unquote(path.pop(0))
 
     if not path:  # operations on comment
-        # update comment
-        if event["httpMethod"] == "PUT":
-            try:
-                comment.update(article_url_title, comment_id, body["text"])
-                return {"statusCode": 200}
-            except PermissionError:
-                return {"statusCode": 401}
-
         # delete comment
-        elif event["httpMethod"] == "DELETE":
+        if event["httpMethod"] == "DELETE":
             try:
                 comment.delete(article_url_title, comment_id)
                 return {"statusCode": 200}
@@ -178,7 +176,7 @@ def handler(event, context):
     if not path:
         # create resp
         if event["httpMethod"] == "POST":
-            resp_id = comment.create_resp(article_url_title, comment_id, body["text"])
+            resp_id = comment.create_resp(article_url_title, comment_id, body["author"], body["content"])
             return {
                 "statusCode": 201,
                 "body": json.dumps({"id": resp_id})
@@ -186,23 +184,10 @@ def handler(event, context):
 
     # specific resp
     # next path element is the id of a resp
-    resp_id = path.pop(0)
-
-    # update resp
-    if event["httpMethod"] == "PUT":
-        try:
-            comment.update_resp(
-                article_url_title,
-                comment_id,
-                resp_id,
-                body["text"]
-            )
-            return {"statusCode": 200}
-        except PermissionError:
-            return {"statusCode": 401}
+    resp_id = urllib.parse.unquote(path.pop(0))
 
     # delete resp
-    elif event["httpMethod"] == "DELETE":
+    if event["httpMethod"] == "DELETE":
         try:
             comment.delete_resp(
                 article_url_title,

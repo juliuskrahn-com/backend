@@ -81,7 +81,7 @@ class Stack(core.Stack):
             partition_key=dynamodb.Attribute(name="tag", type=dynamodb.AttributeType.STRING),
             sort_key=dynamodb.Attribute(name="published", type=dynamodb.AttributeType.STRING),
             projection_type=dynamodb.ProjectionType.INCLUDE,
-            non_key_attributes=["urlTitle", "title", "desc"]
+            non_key_attributes=["urlTitle", "title", "description"]
         )
 
         article_table.grant_read_write_data(proxy_fn)

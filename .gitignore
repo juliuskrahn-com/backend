@@ -1,6 +1,7 @@
 .idea
 
-lambda/*_layer/
+build
+cdk.context.json
 
 *.swp
 package-lock.json

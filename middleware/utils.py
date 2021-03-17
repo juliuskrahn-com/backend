@@ -83,7 +83,7 @@ def data(model):
             except ValidationError as e:
                 return Response(
                     status_code=400,
-                    error_messages=[["Request validation failed", e.json()]])
+                    error_messages=[["Request validation failed (pydantic error)", e.json()]])
         return wrapper
     return decorator
 

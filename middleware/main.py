@@ -1,7 +1,6 @@
 import json
 import functools
 from typing import Optional, Callable
-from .auth import Authenticator
 
 
 class Event:
@@ -64,18 +63,14 @@ class Response:
         }
 
 
-authenticator = Authenticator()
-
-
 def middleware(handler: Callable):
-    """Middleware between API Gateway and a handler: maps event/ response and authenticates the user.
+    """Middleware between API Gateway and a handler: maps event/ response
 
     The handler gets a mapped event and an unmodified context; and has to return a Response"""
 
     @functools.wraps(handler)
     def wrapper(event: dict, context: dict):
         event = Event(event)
-        authenticator.register(event.body.get("key"))
         response: Response = handler(event, context)
         return response.map()
     return wrapper

@@ -15,9 +15,10 @@ class Model(BaseModel):
 comment_table = middleware.get_comment_table()
 
 
-@middleware.middleware
-@middleware.admin_guard
 @middleware.data(Model)
+@middleware.admin_guard
+@middleware.register_user
+@middleware.middleware
 def handler(event: middleware.Event, context, data: Model):
     comment_table.delete_item(Key={"articleUrlTitle": data.articleUrlTitle, "id": data.commentId})
     return middleware.Response()

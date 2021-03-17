@@ -1,24 +1,72 @@
-from . import Response, Event, authenticator
+from . import Response, Event
 import functools
 from typing import Callable
 from pydantic import ValidationError
 import boto3
 
 
-def admin_guard(middleware_wrapped_handler: Callable):
-    """Executes the handler if the user is admin, otherwise a 401 status code is returned along with an error message"""
+class Authenticator:
+    """Loads the admin key once - compares against that key and stores the status of the current user
 
+    Used as a global instance, the user is registered by the "register_user" decorator
+    """
+
+    def __init__(self):
+        self._current_user_is_admin = None
+
+    @functools.cached_property
+    def _admin_key(self):
+        session = boto3.session.Session()
+        client = session.client(
+            service_name='secretsmanager',
+            region_name="us-east-1"
+        )
+        resp = client.get_secret_value(SecretId="blog-admin-key")
+        return resp['SecretString']
+
+    def register(self, key):
+        """Sets the admin status (bool) of the current user by comparing the user's key"""
+        self._current_user_is_admin = key == self._admin_key
+        return self._current_user_is_admin
+
+    @property
+    def current_user_is_admin(self):
+        if self._current_user_is_admin is None:
+            raise ValueError("User hasn't been registered")
+        return self._current_user_is_admin
+
+
+authenticator = Authenticator()
+
+
+# handler decorator
+def register_user(middleware_wrapped_handler: Callable):
+    """Registers the user on the "authenticator" global"""
     @functools.wraps(middleware_wrapped_handler)
-    def wrapper(event: Event, context):
-        if authenticator.current_user_is_admin:
-            return middleware_wrapped_handler(event, context)
-        return Response(
-            status_code=401,
-            error_messages=["Requires admin key: specify the key in the request body ('key')"])
-
+    def wrapper(*args, **kwargs):
+        authenticator.register(args[0].body.get("key"))
+        return middleware_wrapped_handler(*args, **kwargs)
     return wrapper
 
 
+# handler decorator
+def admin_guard(middleware_wrapped_handler: Callable):
+    """Executes the handler if the user is admin, otherwise a 401 status code is returned along with an error message
+
+    The user has to be registered, use the "register_user" decorator
+    """
+
+    @functools.wraps(middleware_wrapped_handler)
+    def wrapper(*args, **kwargs):
+        if authenticator.current_user_is_admin:
+            return middleware_wrapped_handler(*args, **kwargs)
+        return Response(
+            status_code=401,
+            error_messages=["Requires admin key: specify the key in the request body ('key')"])
+    return wrapper
+
+
+# handler decorator
 def data(model):
     """Parses Lambda event and context with the pydantic model and passes it on to the handler
 
@@ -28,16 +76,15 @@ def data(model):
 
     def decorator(middleware_wrapped_handler: Callable):
         @functools.wraps(middleware_wrapped_handler)
-        def wrapper(event: Event, context):
+        def wrapper(*args, **kwargs):
             try:
-                data_ = model.build(event, context)
-                return middleware_wrapped_handler(event, context, data_)
+                data_ = model.build(args[0], args[1])
+                return middleware_wrapped_handler(*args, data_, **kwargs)
             except ValidationError as e:
                 return Response(
                     status_code=400,
                     error_messages=[["Request validation failed", e.json()]])
         return wrapper
-
     return decorator
 
 

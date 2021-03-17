@@ -21,8 +21,9 @@ class Model(BaseModel):
 comment_table = middleware.get_comment_table()
 
 
-@middleware.middleware
 @middleware.data(Model)
+@middleware.register_user
+@middleware.middleware
 def handler(event: middleware.Event, context, data: Model):
     id_ = f"{datetime.datetime.utcnow().isoformat()}#{uuid4()}"
     author = data.author

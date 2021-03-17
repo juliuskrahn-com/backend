@@ -18,10 +18,10 @@ class Model(BaseModel):
 comment_table = middleware.get_comment_table()
 
 
-@middleware.data(Model)
-@middleware.admin_guard
-@middleware.register_user
 @middleware.middleware
+@middleware.register_user
+@middleware.admin_guard
+@middleware.data(Model)
 def handler(event: middleware.Event, context, data: Model):
     try:
         comment_table.update_item(

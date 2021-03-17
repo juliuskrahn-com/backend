@@ -14,8 +14,8 @@ class Model(BaseModel):
 comment_table = middleware.get_comment_table()
 
 
-@middleware.data(Model)
 @middleware.middleware
+@middleware.data(Model)
 def handler(event: middleware.Event, context, data: Model):
     comments = comment_table.query_paginate_items(
         KeyConditionExpression=boto3.dynamodb.conditions.Key("articleUrlTitle").eq(data.articleUrlTitle))

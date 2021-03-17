@@ -2,10 +2,10 @@
 
 Use the handler decorators like this, in this order!:
 
-@data(Model)
-@admin_guard
-@register_user
 @middleware
+@register_user
+@admin_guard
+@data(Model)
 """
 
 from .main import middleware, Event, Response

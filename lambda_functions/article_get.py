@@ -13,8 +13,8 @@ class Model(BaseModel):
 article_table = middleware.get_article_table()
 
 
-@middleware.data(Model)
 @middleware.middleware
+@middleware.data(Model)
 def handler(event: middleware.Event, context, data: Model):
     article = article_table.get_item(Key={"urlTitle": data.urlTitle}).get("Item")
     if not article:

@@ -14,8 +14,8 @@ class Model(BaseModel):
 article_table = middleware.get_article_table()
 
 
-@middleware.data(Model)
 @middleware.middleware
+@middleware.data(Model)
 def handler(event: middleware.Event, context, data: Model):
     articles = article_table.query_paginate_items(
         IndexName="tagIndex",

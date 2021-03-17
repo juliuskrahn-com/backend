@@ -8,7 +8,7 @@ class Model(BaseModel):
 
     @classmethod
     def build(cls, event: middleware.Event, context):
-        return cls(tagName=event.path_parameters["tagName"])
+        return cls(tagName=event.path_parameters.get("tagName"))
 
 
 article_table = middleware.get_article_table()

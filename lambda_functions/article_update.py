@@ -12,7 +12,7 @@ class Model(BaseModel):
 
     @classmethod
     def build(cls, event: middleware.Event, context):
-        return cls(urlTitle=event.path_parameters["articleUrlTitle"], **event.body)
+        return cls(urlTitle=event.path_parameters.get("articleUrlTitle"), **event.body)
 
 
 article_table = middleware.get_article_table()

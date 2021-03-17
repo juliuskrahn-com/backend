@@ -13,8 +13,8 @@ class Model(BaseModel):
 
     @classmethod
     def build(cls, event: middleware.Event, context):
-        return cls(articleUrlTitle=event.path_parameters["articleUrlTitle"],
-                   commentId=event.path_parameters["commentId"],
+        return cls(articleUrlTitle=event.path_parameters.get("articleUrlTitle"),
+                   commentId=event.path_parameters.get("commentId"),
                    **event.body)
 
 

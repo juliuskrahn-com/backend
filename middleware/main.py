@@ -10,15 +10,31 @@ class Event:
         self.ressource: str = event.get("resource")
         self.path: str = event.get("path")
         self.method: str = event.get("httpMethod")
-        self.headers: dict = event.get("headers", {})
-        self.multi_value_headers: dict = event.get("multiValueHeaders", {})
-        self.query_string_parameters: dict = event.get("queryStringParameters", {})
-        self.multi_value_query_string_parameters: dict = event.get("multiValueQueryStringParameters", {})
-        self.path_parameters: dict = event.get("pathParameters", {})
-        self.stage_variables: dict = event.get("stageVariables", {})
-        self.request_context: dict = event.get("requestContext", {})
+        self.headers: dict = event.get("headers")
+        if self.headers is None:
+            self.headers = {}
+        self.multi_value_headers: dict = event.get("multiValueHeaders")
+        if self.multi_value_headers is None:
+            self.multi_value_headers = {}
+        self.query_string_parameters: dict = event.get("queryStringParameters")
+        if self.query_string_parameters is None:
+            self.query_string_parameters = {}
+        self.multi_value_query_string_parameters: dict = event.get("multiValueQueryStringParameters")
+        if self.multi_value_query_string_parameters is None:
+            self.multi_value_query_string_parameters = {}
+        self.path_parameters: dict = event.get("pathParameters")
+        if self.path_parameters is None:
+            self.path_parameters = {}
+        self.stage_variables: dict = event.get("stageVariables")
+        if self.stage_variables is None:
+            self.stage_variables = {}
+        self.request_context: dict = event.get("requestContext")
+        if self.request_context is None:
+            self.request_context = {}
         self.body: dict = json.loads(event.get("body", ""))
-        self.is_base_64_encoded: bool = event.get("isBase64Encoded", False)
+        if self.body is None:
+            self.body = {}
+        self.is_base_64_encoded: bool = event.get("isBase64Encoded")
 
 
 # TODO mapping for Lambda context
@@ -55,12 +71,14 @@ class Response:
         }
         if self.error_messages:
             body["errors"] = self.error_messages
-        return {
+        mapped = {
             "statusCode": self.status_code,
             "headers": self.headers,
             "multiValueHeaders": self.multi_value_headers,
-            "body": json.dumps(body)
         }
+        if body:
+            mapped["body"] = json.dumps(body)
+        return mapped
 
 
 def middleware(handler: Callable):

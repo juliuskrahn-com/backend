@@ -2,6 +2,8 @@
 
 Built on AWS with API Gateway + Lambda + DynamoDB, deployed with CDK Python.
 
+[API documentaion](https://app.swaggerhub.com/apis/julius-krahn/blog)
+
 ## Structure
 
 - lambda/proxy -> main Lambda Fn, configured as an API Gateway proxy

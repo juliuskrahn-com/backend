@@ -1,6 +1,5 @@
 import unittest
-import middleware
-import middleware.utils
+import backend.middleware as middleware
 import tests.data as data
 import pydantic
 import json

@@ -1,4 +1,4 @@
-import middleware
+import backend.middleware as middleware
 
 
 @middleware.middleware

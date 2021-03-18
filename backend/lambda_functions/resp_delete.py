@@ -1,4 +1,4 @@
-import middleware
+import backend.middleware as middleware
 from pydantic import BaseModel
 import botocore.exceptions
 

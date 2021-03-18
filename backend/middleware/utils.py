@@ -3,6 +3,7 @@ import functools
 from typing import Callable
 from pydantic import ValidationError
 import boto3
+import os
 
 
 class Authenticator:
@@ -126,8 +127,10 @@ def wrap_boto3_dynamodb_table(table):
 
 
 def get_article_table():
-    return wrap_boto3_dynamodb_table(boto3.resource("dynamodb").Table("blog-article"))
+    name = os.environ.get("ArticleTableName")
+    return wrap_boto3_dynamodb_table(boto3.resource("dynamodb").Table(name))
 
 
 def get_comment_table():
-    return wrap_boto3_dynamodb_table(boto3.resource("dynamodb").Table("blog-comment"))
+    name = os.environ.get("CommentTableName")
+    return wrap_boto3_dynamodb_table(boto3.resource("dynamodb").Table(name))

@@ -1,4 +1,4 @@
-import middleware
+import backend.middleware as middleware
 from pydantic import BaseModel
 
 
@@ -14,9 +14,9 @@ article_table = middleware.get_article_table()
 
 
 @middleware.middleware
-@middleware.register_user
-@middleware.admin_guard
 @middleware.data(Model)
 def handler(event: middleware.Event, context, data: Model):
-    article_table.delete_item(Key={"urlTitle": data.urlTitle})
-    return middleware.Response()
+    article = article_table.get_item(Key={"urlTitle": data.urlTitle}).get("Item")
+    if not article:
+        return middleware.Response(status_code=404, error_messages=["Article does not exist"])
+    return middleware.Response(body={"article": article})

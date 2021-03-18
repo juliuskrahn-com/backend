@@ -1,4 +1,4 @@
-import middleware
+import backend.middleware as middleware
 
 
 article_table = middleware.get_article_table()

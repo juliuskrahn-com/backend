@@ -1,0 +1,520 @@
+openapi: 3.0.0
+info:
+  title: Blog API
+  description: |
+    [GitHub](https://github.com/juliuskrahn-com/backend).
+    For operations with the tag 'Admin', the admin key has to be included in the request body ('key').
+    CORS is enabled.
+  version: 1.0.0
+servers:
+- url: https://api.juliuskrahn.com
+- url: https://virtserver.swaggerhub.com/julius-krahn/blog/1.0.0
+  description: SwaggerHub API Auto Mocking
+paths:
+  /admin-login:
+    post:
+      tags:
+      - Admin
+      summary: Check admin key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/body'
+        required: true
+      responses:
+        "200":
+          description: The admin key is correct
+        "400":
+          description: The admin key is incorrect (maybe invalid)
+        "429":
+          description: Too many requests
+        "500":
+          description: Internal server error
+  /article:
+    get:
+      tags:
+      - Article
+      summary: Get all articles, sorted by published date (descending, content attr
+        excluded)
+      responses:
+        "200":
+          description: Ok (a 'paginationKey' might be included)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Articles'
+        "429":
+          description: Too many requests
+        "500":
+          description: Internal server error
+    post:
+      tags:
+      - Admin
+      summary: Create an article
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Article'
+        required: true
+      responses:
+        "201":
+          description: Created
+        "401":
+          description: 'Requires admin key: specify the key in the request body (''key'')'
+        "429":
+          description: Too many requests
+        "500":
+          description: Internal server error
+  /tag:
+    get:
+      tags:
+      - Article
+      summary: Get all tags
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tags'
+        "429":
+          description: Too many requests
+        "500":
+          description: Internal server error
+  /tag/{tagName}:
+    get:
+      tags:
+      - Article
+      summary: Get all articles with that tag, sorted by published date (descending,
+        content attr excluded)
+      parameters:
+      - name: tagName
+        in: path
+        description: Tag name
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Articles'
+        "404":
+          description: Not found
+        "429":
+          description: Too many requests
+        "500":
+          description: Internal server error
+  /article/{articleUrlTitle}:
+    get:
+      tags:
+      - Article
+      summary: Get an article
+      parameters:
+      - name: articleUrlTitle
+        in: path
+        description: Article URL title (should be lowercase, words separated with
+          '-')
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Article'
+        "404":
+          description: Not found
+        "429":
+          description: Too many requests
+        "500":
+          description: Internal server error
+    put:
+      tags:
+      - Admin
+      summary: Replace an article
+      parameters:
+      - name: articleUrlTitle
+        in: path
+        description: Article URL title (should be lowercase, words separated with
+          '-')
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Article'
+        required: true
+      responses:
+        "200":
+          description: Replaced
+        "401":
+          description: 'Requires admin key: specify the key in the request body (''key'')'
+        "404":
+          description: Not found
+        "429":
+          description: Too many requests
+        "500":
+          description: Internal server error
+    delete:
+      tags:
+      - Admin
+      summary: Delete an article
+      parameters:
+      - name: articleUrlTitle
+        in: path
+        description: Article URL title (should be lowercase, words separated with
+          '-')
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Deleted
+        "401":
+          description: 'Requires admin key: specify the key in the request body (''key'')'
+        "429":
+          description: Too many requests
+        "500":
+          description: Internal server error
+  /article/{articleUrlTitle}/comments:
+    get:
+      tags:
+      - Comment
+      summary: Get all comments for that article
+      parameters:
+      - name: articleUrlTitle
+        in: path
+        description: Article URL title (should be lowercase, words separated with
+          '-')
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comments'
+        "404":
+          description: Not found
+        "429":
+          description: Too many requests
+        "500":
+          description: Internal server error
+    post:
+      tags:
+      - Comment
+      summary: Create a comment for that article
+      parameters:
+      - name: articleUrlTitle
+        in: path
+        description: Article URL title (should be lowercase, words separated with
+          '-')
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Comment'
+        required: true
+      responses:
+        "201":
+          description: Created
+        "404":
+          description: Not found
+        "429":
+          description: Too many requests
+        "500":
+          description: Internal server error
+  /article/{articleUrlTitle}/comments/{commentId}:
+    delete:
+      tags:
+      - Admin
+      summary: Delete a comment
+      parameters:
+      - name: articleUrlTitle
+        in: path
+        description: Article URL title (should be lowercase, words separated with
+          '-')
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: commentId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Deleted
+        "401":
+          description: 'Requires admin key: specify the key in the request body (''key'')'
+        "404":
+          description: Not found
+        "429":
+          description: Too many requests
+        "500":
+          description: Internal server error
+  /article/{articleUrlTitle}/comments/{commentId}/resps:
+    post:
+      tags:
+      - Comment
+      summary: Create a response for that article, comment
+      parameters:
+      - name: articleUrlTitle
+        in: path
+        description: Article URL title (should be lowercase, words separated with
+          '-')
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: commentId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Resp'
+        required: true
+      responses:
+        "201":
+          description: Created
+        "404":
+          description: Not found
+        "429":
+          description: Too many requests
+        "500":
+          description: Internal server error
+  /article/{articleUrlTitle}/comments/{commentId}/resps/{respId}:
+    delete:
+      tags:
+      - Admin
+      summary: Delete a response
+      parameters:
+      - name: articleUrlTitle
+        in: path
+        description: Article URL title (should be lowercase, words separated with
+          '-')
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: commentId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: respId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Deleted
+        "401":
+          description: 'Requires admin key: specify the key in the request body (''key'')'
+        "404":
+          description: Not found
+        "429":
+          description: Too many requests
+        "500":
+          description: Internal server error
+components:
+  schemas:
+    AdminKey:
+      type: string
+      description: Admin key
+      example: fdsli3zdedp31
+    CreationId:
+      type: string
+      description: ISO Format Datetime (UTC) + uuid (separated by "#")
+      example: 2021-01-01#fdsli3zdedp31
+    Article:
+      required:
+      - content
+      - description
+      - tag
+      - title
+      - urlTitle
+      type: object
+      properties:
+        urlTitle:
+          type: string
+          description: Can't be modified after creation
+          example: my-article
+        title:
+          type: string
+          example: My cool article
+        description:
+          type: string
+          example: This is a very cool article
+        tag:
+          type: string
+          example: cool
+        published:
+          type: string
+          description: ISO Format Datetime UTC (auto., can't be set or modified)
+          example: 2021-01-01
+        content:
+          type: string
+          example: I recently thought about something... what are your thoughts?
+    Articles:
+      required:
+      - articles
+      type: object
+      properties:
+        articles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Article'
+    Tags:
+      required:
+      - tags
+      type: object
+      properties:
+        tags:
+          type: array
+          items:
+            type: string
+    Comment:
+      required:
+      - author
+      - content
+      - id
+      - resps
+      type: object
+      properties:
+        content:
+          type: string
+          example: Wow that's so cool!
+        author:
+          type: string
+          example: Lea
+        id:
+          $ref: '#/components/schemas/CreationId'
+        resps:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Resp'
+          description: Dictionary (key -> resp id)
+          example:
+            "2021-01-01#fdsli3zdedp31":
+              content: You're right
+              author: Steve
+    Resp:
+      required:
+      - author
+      - content
+      type: object
+      properties:
+        content:
+          type: string
+          example: You're right
+        author:
+          type: string
+          example: Steve
+    Comments:
+      required:
+      - comments
+      type: object
+      properties:
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+    body:
+      type: object
+      properties:
+        key:
+          $ref: '#/components/schemas/AdminKey'
+  responses:
+    "200":
+      description: Ok
+    "201":
+      description: Created
+    "400":
+      description: Request validation failed
+    "401":
+      description: 'Requires admin key: specify the key in the request body (''key'')'
+    "404":
+      description: Not found
+    "429":
+      description: Too many requests
+    "500":
+      description: Internal server error
+  parameters:
+    TagName:
+      name: tagName
+      in: path
+      description: Tag name
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+    ArticleUrlTitle:
+      name: articleUrlTitle
+      in: path
+      description: Article URL title (should be lowercase, words separated with '-')
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+    CommentId:
+      name: commentId
+      in: path
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+    RespId:
+      name: respId
+      in: path
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string

@@ -15,7 +15,7 @@ class API(apigw.RestApi):
                 allow_origins=apigw.Cors.ALL_ORIGINS,
                 allow_methods=apigw.Cors.ALL_METHODS,
             ),
-            default_integration=Integration(self, "default"),
+            default_integration=APIIntegration(self, "default"),
             deploy_options=apigw.StageOptions(
                 throttling_rate_limit=256,
                 throttling_burst_limit=64,  # concurrent
@@ -48,10 +48,12 @@ class API(apigw.RestApi):
             lambda_.LayerVersion(
                 self,
                 "blog-middleware-layer",
-                code=lambda_.Code.from_asset("../build/middleware_layer"),
+                code=lambda_.Code.from_asset("../../build/middleware_layer"),
                 compatible_runtimes=[lambda_.Runtime.PYTHON_3_8]
             )
         ]
+
+        # TODO pydantic layer
 
         self.admin_key_secret = sm.Secret(  # read access granted in integration construct
             self,
@@ -59,12 +61,15 @@ class API(apigw.RestApi):
             secret_name="blog-admin-key"
         )
 
+        self.article_table_name = construct_id + "-article-table"
+        self.comment_table_name = construct_id + "-comment-table"
+
         #   (applied to integrations individually)
 
         article_table = dynamodb.Table(
             self,
             "blog-article-table",
-            table_name="blog-article",
+            table_name=self.article_table_name,
             partition_key=dynamodb.Attribute(name="urlTitle", type=dynamodb.AttributeType.STRING),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
             point_in_time_recovery=True
@@ -81,7 +86,7 @@ class API(apigw.RestApi):
         comment_table = dynamodb.Table(
             self,
             "blog-comment-table",
-            table_name="blog-comment",
+            table_name=self.comment_table_name,
             partition_key=dynamodb.Attribute(name="articleUrlTitle", type=dynamodb.AttributeType.STRING),
             sort_key=dynamodb.Attribute(name="id", type=dynamodb.AttributeType.STRING),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST
@@ -89,59 +94,59 @@ class API(apigw.RestApi):
 
         # Integrations
 
-        integration_article_get = Integration(self, "article_get")
+        integration_article_get = APIIntegration(self, "article_get")
         article_table.grant_read_data(integration_article_get)
         resource_article.add_method("GET", integration=integration_article_get)
 
-        integration_article_get_collection = Integration(self, "article_get_collection")
+        integration_article_get_collection = APIIntegration(self, "article_get_collection")
         article_table.grant_read_data(integration_article_get_collection)
         resource_article_collection.add_method("GET", integration=integration_article_get_collection)
 
-        integration_article_create = Integration(self, "article_create")
+        integration_article_create = APIIntegration(self, "article_create")
         article_table.grant_read_write_data(integration_article_create)
         resource_article.add_method("POST", integration=integration_article_create)
 
-        integration_article_update = Integration(self, "article_update")
+        integration_article_update = APIIntegration(self, "article_update")
         article_table.grant_read_write_data(integration_article_update)
         resource_article.add_method("PATCH", integration=integration_article_update)
 
-        integration_article_delete = Integration(self, "article_delete")
+        integration_article_delete = APIIntegration(self, "article_delete")
         article_table.grant_read_write_data(integration_article_delete)
         resource_article.add_method("DELETE", integration=integration_article_delete)
 
-        integration_comment_get_collection = Integration(self, "comment_get_collection")
+        integration_comment_get_collection = APIIntegration(self, "comment_get_collection")
         comment_table.grant_read_data(integration_comment_get_collection)
         resource_article_comment_collection.add_method("GET", integration=integration_comment_get_collection)
 
-        integration_comment_create = Integration(self, "comment_create")
+        integration_comment_create = APIIntegration(self, "comment_create")
         comment_table.grant_read_write_data(integration_comment_create)
         resource_article_comment_collection.add_method("POST", integration=integration_comment_create)
 
-        integration_comment_delete = Integration(self, "comment_delete")
+        integration_comment_delete = APIIntegration(self, "comment_delete")
         comment_table.grant_read_write_data(integration_comment_delete)
         resource_article_comment.add_method("POST", integration=integration_comment_delete)
 
-        integration_resp_create = Integration(self, "resp_create")
+        integration_resp_create = APIIntegration(self, "resp_create")
         comment_table.grant_read_write_data(integration_resp_create)
         resource_article_comment_resp_collection.add_method("POST", integration=integration_resp_create)
 
-        integration_resp_delete = Integration(self, "resp_delete")
+        integration_resp_delete = APIIntegration(self, "resp_delete")
         comment_table.grant_read_write_data(integration_resp_delete)
         resource_article_comment_resp.add_method("DELETE", integration=integration_resp_delete)
 
-        integration_tag_get_collection = Integration(self, "tag_get_collection")
+        integration_tag_get_collection = APIIntegration(self, "tag_get_collection")
         article_table.grant_read_data(integration_tag_get_collection)
         resource_tag_collection.add_method("GET", integration=integration_tag_get_collection)
 
-        integration_tag_get_article_collection = Integration(self, "tag_get_article_collection")
+        integration_tag_get_article_collection = APIIntegration(self, "tag_get_article_collection")
         article_table.grant_read_data(integration_tag_get_article_collection)
         resource_tag.add_method("GET", integration_tag_get_article_collection)
 
-        integration_admin_login = Integration(self, "admin_login")
+        integration_admin_login = APIIntegration(self, "admin_login")
         resource_admin_login.add_method("POST", integration=integration_admin_login)
 
 
-class Integration(apigw.LambdaIntegration):
+class APIIntegration(apigw.LambdaIntegration):
 
     def __init__(self, scope: API, name: str):
         self.lambda_function = lambda_.Function(
@@ -149,7 +154,11 @@ class Integration(apigw.LambdaIntegration):
             f"blog-{name}-lambda-fn",
             runtime=lambda_.Runtime.PYTHON_3_8,
             handler=f"{name}.handler",
-            code=lambda_.Code.from_asset(f"../lambda_functions/{name}.py"),
+            code=lambda_.Code.from_asset(f"../../backend/lambda_functions/{name}.py"),
+            environment={
+                "ArticleTableName": scope.article_table_name,
+                "CommentTableName": scope.comment_table_name
+            },
             layers=scope.lambda_layers
         )
         super().__init__(

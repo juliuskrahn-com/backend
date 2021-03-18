@@ -22,7 +22,7 @@ class Authenticator:
             service_name='secretsmanager',
             region_name="us-east-1"
         )
-        resp = client.get_secret_value(SecretId="blog-admin-key")
+        resp = client.get_secret_value(SecretId="blog-backend-admin-key")
         return resp['SecretString']
 
     def register(self, key):

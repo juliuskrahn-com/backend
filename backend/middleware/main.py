@@ -31,8 +31,9 @@ class Event:
         self.request_context: dict = event.get("requestContext")
         if self.request_context is None:
             self.request_context = {}
-        self.body: dict = json.loads(event.get("body", ""))
-        if self.body is None:
+        try:
+            self.body = json.loads(event.get("body"))
+        except TypeError:
             self.body = {}
         self.is_base_64_encoded: bool = event.get("isBase64Encoded")
 

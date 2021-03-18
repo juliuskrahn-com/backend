@@ -5,7 +5,8 @@ mkdir "../build"
 
 mkdir "../build/middleware_layer"
 mkdir "../build/middleware_layer/python"
-cp -r "../backend/middleware" "../build/middleware_layer/python"
+mkdir "../build/middleware_layer/python/backend"
+cp -r "../backend/middleware" "../build/middleware_layer/python/backend"
 
 mkdir "../build/vendor_layer"
 mkdir "../build/vendor_layer/python"

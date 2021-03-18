@@ -24,6 +24,9 @@ class TestMiddlewareCore(unittest.TestCase):
         self.assertEqual(event.body, {"key": "1234", "profile": {"email": "peter@email.com"}})
         self.assertEqual(event.is_base_64_encoded, None)
 
+        event_body_was_none = middleware.Event({"body": None})
+        self.assertEqual(event_body_was_none.body, {})
+
     def test_response(self):
         default_response = middleware.Response()
         self.assertEqual(default_response.body, {})
@@ -142,7 +145,7 @@ class TestMiddlewareAuthentication(unittest.TestCase):
             service_name='secretsmanager',
             region_name="us-east-1"
         )
-        return client.get_secret_value(SecretId="blog-admin-key")['SecretString']
+        return client.get_secret_value(SecretId="blog-backend-admin-key")['SecretString']
 
     def setUp(self):
         self.reset_authenticator()

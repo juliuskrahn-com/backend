@@ -10,9 +10,13 @@ class Model(BaseModel):
 
     @classmethod
     def build(cls, event: middleware.Event, context):
-        return cls(articleUrlTitle=event.path_parameters.get("articleUrlTitle"),
-                   commentId=event.path_parameters.get("commentId"),
-                   respId=event.path_parameters.get("respId"))
+        kwargs = {
+            **event.body,
+            "articleUrlTitle": event.path_parameters.get("articleUrlTitle"),
+            "commentId": event.path_parameters.get("commentId"),
+            "respId": event.path_parameters.get("respId")
+        }
+        return cls(**kwargs)
 
 
 comment_table = middleware.get_comment_table()

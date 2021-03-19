@@ -11,8 +11,7 @@ class API(aws_cdk.core.Construct):
     def __init__(
             self, scope: aws_cdk.core.Construct,
             construct_id: str,
-            environment: object = Environment.TESTING,
-            **kwargs):
+            environment: object = Environment.TESTING):
         super().__init__(scope, construct_id)
 
         # Integration dependencies
@@ -190,5 +189,5 @@ class APIIntegration(apigw.LambdaIntegration):
 
 
 def snake_case_to_camel_case(string):
-    string = string.join(word.title() for word in string.split("_"))
+    string = "".join(word.title() for word in string.split("_"))
     return string[:1].lower() + string[1:] if string else ""

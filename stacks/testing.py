@@ -4,6 +4,7 @@ import aws_cdk.aws_certificatemanager as cm
 import aws_cdk.aws_route53 as route53
 import aws_cdk.aws_route53_targets as route53_targets
 from .constructs import API
+from .constants import Environment
 
 
 class Testing(core.Stack):
@@ -16,16 +17,7 @@ class Testing(core.Stack):
 
         # API
 
-        api = API(
-            self,
-            "api.testing",
-            endpoint_configuration=apigw.EndpointConfiguration(types=[apigw.EndpointType.REGIONAL]),
-            deploy_options=apigw.StageOptions(
-                throttling_rate_limit=256,
-                throttling_burst_limit=64,  # concurrent
-                caching_enabled=False,
-            )
-        )
+        api = API(self, "api", environment=Environment.TESTING)
 
         # API domain name
 

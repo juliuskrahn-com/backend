@@ -3,11 +3,16 @@ import aws_cdk.aws_apigateway as apigw
 import aws_cdk.aws_lambda as lambda_
 import aws_cdk.aws_dynamodb as dynamodb
 import aws_cdk.aws_secretsmanager as sm
+from ..constants import Environment
 
 
 class API(aws_cdk.core.Construct):
 
-    def __init__(self, scope: aws_cdk.core.Construct, construct_id: str, **kwargs):
+    def __init__(
+            self, scope: aws_cdk.core.Construct,
+            construct_id: str,
+            environment: object = Environment.TESTING,
+            **kwargs):
         super().__init__(scope, construct_id)
 
         # Integration dependencies
@@ -48,7 +53,9 @@ class API(aws_cdk.core.Construct):
             table_name=self.article_table_name,
             partition_key=dynamodb.Attribute(name="urlTitle", type=dynamodb.AttributeType.STRING),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
-            point_in_time_recovery=True
+            removal_policy=aws_cdk.core.RemovalPolicy.RETAIN if environment is Environment.PRODUCTION
+            else aws_cdk.core.RemovalPolicy.DESTROY,
+            point_in_time_recovery=environment is Environment.PRODUCTION
         )
 
         article_table.add_global_secondary_index(
@@ -65,31 +72,31 @@ class API(aws_cdk.core.Construct):
             table_name=self.comment_table_name,
             partition_key=dynamodb.Attribute(name="articleUrlTitle", type=dynamodb.AttributeType.STRING),
             sort_key=dynamodb.Attribute(name="id", type=dynamodb.AttributeType.STRING),
-            billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST
+            billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
+            removal_policy=aws_cdk.core.RemovalPolicy.RETAIN if environment is Environment.PRODUCTION
+            else aws_cdk.core.RemovalPolicy.DESTROY,
         )
 
         # RestApi
 
-        apigw_rest_api_kwargs = {
-            "default_cors_preflight_options": apigw.CorsOptions(
+        self.apigw_rest_api = apigw.RestApi(
+            self,
+            "api",
+            default_cors_preflight_options=apigw.CorsOptions(
                 allow_origins=apigw.Cors.ALL_ORIGINS,
                 allow_methods=apigw.Cors.ALL_METHODS,
             ),
-            "default_integration": APIIntegration(self, "default"),
-            "deploy_options": apigw.StageOptions(
+            default_integration=APIIntegration(self, "default"),
+            deploy_options=apigw.StageOptions(
                 throttling_rate_limit=256,
                 throttling_burst_limit=64,  # concurrent
-                caching_enabled=True,
+                caching_enabled=True if environment is Environment.PRODUCTION else False,
                 cache_ttl=aws_cdk.core.Duration.minutes(5)
             ),
-            "endpoint_configuration": apigw.EndpointConfiguration(types=[apigw.EndpointType.EDGE]),
-            **kwargs
-        }
-
-        self.apigw_rest_api = apigw.RestApi(
-            self,
-            construct_id,
-            **apigw_rest_api_kwargs
+            endpoint_configuration=apigw.EndpointConfiguration(
+                types=[apigw.EndpointType.EDGE] if environment is Environment.PRODUCTION
+                else [apigw.EndpointType.REGIONAL]
+            ),
         )
 
         # Resources
@@ -173,6 +180,7 @@ class APIIntegration(apigw.LambdaIntegration):
                 "ArticleTableName": scope.article_table_name,
                 "CommentTableName": scope.comment_table_name
             },
+            memory_size=256,
             layers=scope.lambda_layers
         )
         super().__init__(

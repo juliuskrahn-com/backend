@@ -4,6 +4,7 @@ import aws_cdk.aws_certificatemanager as cm
 import aws_cdk.aws_route53 as route53
 import aws_cdk.aws_route53_targets as route53_targets
 from .constructs import API
+from .constants import Environment
 
 
 class Production(core.Stack):
@@ -16,7 +17,7 @@ class Production(core.Stack):
 
         # API
 
-        api = API(self, "api.production")
+        api = API(self, "api", environment=Environment.PRODUCTION)
 
         # API domain name
 

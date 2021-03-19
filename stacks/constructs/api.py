@@ -115,6 +115,8 @@ class API(aws_cdk.core.Construct):
 
         # Integrations
 
+        self.apigw_rest_api.root.add_proxy()
+
         integration_article_get = APIIntegration(self, "article_get")
         article_table.grant_read_data(integration_article_get.lambda_function)
         resource_article.add_method("GET", integration=integration_article_get)

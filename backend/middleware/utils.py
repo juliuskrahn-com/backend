@@ -4,6 +4,7 @@ from typing import Callable
 from pydantic import ValidationError
 import boto3
 import os
+import logging
 
 
 class Authenticator:
@@ -80,11 +81,16 @@ def data(model):
         def wrapper(*args, **kwargs):
             try:
                 data_ = model.build(args[0], args[1])
-                return middleware_wrapped_handler(*args, data_, **kwargs)
             except ValidationError as e:
                 return Response(
                     status_code=400,
                     error_messages=[["Request validation failed (pydantic error)", e.json()]])
+            except:
+                logging.exception("Data Model failed to build, return 500 resp.")
+                return Response(
+                    status_code=500,
+                    error_messages=["Failed to load the request data. Make sure to check you request."])
+            return middleware_wrapped_handler(*args, data_, **kwargs)
         return wrapper
     return decorator
 

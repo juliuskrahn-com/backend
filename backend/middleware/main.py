@@ -31,10 +31,13 @@ class Event:
         self.request_context: dict = event.get("requestContext")
         if self.request_context is None:
             self.request_context = {}
-        try:
-            self.body = json.loads(event.get("body"))
-        except TypeError:
-            self.body = {}
+        if type(event.get("body")) is str:
+            try:
+                self.body = json.loads(event.get("body"))
+            except TypeError and json.decoder.JSONDecodeError:
+                self.body = None
+        else:
+            self.body = None
         self.is_base_64_encoded: bool = event.get("isBase64Encoded")
 
 

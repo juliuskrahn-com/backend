@@ -28,7 +28,7 @@ class Authenticator:
 
     def register(self, key):
         """Sets the admin status (bool) of the current user by comparing the user's key"""
-        self._current_user_is_admin = key == self._admin_key
+        self._current_user_is_admin = key and key == self._admin_key
         return self._current_user_is_admin
 
     @property
@@ -46,7 +46,10 @@ def register_user(middleware_wrapped_handler: Callable):
     """Registers the user on the "authenticator" global"""
     @functools.wraps(middleware_wrapped_handler)
     def wrapper(*args, **kwargs):
-        authenticator.register(args[0].body.get("key"))
+        key = False
+        if type(args[0].body) == dict:
+            key = args[0].body.get("key", False)
+        authenticator.register(key)
         return middleware_wrapped_handler(*args, **kwargs)
     return wrapper
 

@@ -33,7 +33,7 @@ class Production(core.Stack):
             endpoint_type=apigw.EndpointType.EDGE
         )
 
-        api_domain_name.add_base_path_mapping(api.apigw_rest_api)
+        api_domain_name.add_base_path_mapping(api.instance)
 
         route53.ARecord(
             self,

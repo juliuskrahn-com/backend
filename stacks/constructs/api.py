@@ -3,6 +3,7 @@ import aws_cdk.aws_apigateway as apigw
 import aws_cdk.aws_lambda as lambda_
 import aws_cdk.aws_dynamodb as dynamodb
 import aws_cdk.aws_secretsmanager as sm
+import aws_cdk.aws_logs as logs
 from ..constants import Environment
 
 
@@ -180,6 +181,7 @@ class APIIntegration(apigw.LambdaIntegration):
                 "CommentTableName": scope.comment_table_name
             },
             memory_size=256,
+            log_retention=logs.RetentionDays.FIVE_DAYS,
             layers=scope.lambda_layers
         )
         super().__init__(

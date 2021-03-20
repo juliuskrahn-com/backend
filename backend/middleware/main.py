@@ -1,6 +1,8 @@
 import json
 import functools
 from typing import Optional, Callable
+import urllib.parse
+from typing import Dict, Any
 
 
 class Event:
@@ -8,29 +10,42 @@ class Event:
 
     def __init__(self, event: dict):
         self.ressource: str = event.get("resource")
+
         self.path: str = event.get("path")
+
         self.method: str = event.get("httpMethod")
+
         self.headers: dict = event.get("headers")
         if self.headers is None:
             self.headers = {}
+
         self.multi_value_headers: dict = event.get("multiValueHeaders")
         if self.multi_value_headers is None:
             self.multi_value_headers = {}
+
         self.query_string_parameters: dict = event.get("queryStringParameters")
         if self.query_string_parameters is None:
             self.query_string_parameters = {}
+        self._unquote_dict_items(self.query_string_parameters)
+
         self.multi_value_query_string_parameters: dict = event.get("multiValueQueryStringParameters")
         if self.multi_value_query_string_parameters is None:
             self.multi_value_query_string_parameters = {}
+        self._unquote_dict_items(self.multi_value_query_string_parameters)
+
         self.path_parameters: dict = event.get("pathParameters")
         if self.path_parameters is None:
             self.path_parameters = {}
+        self._unquote_dict_items(self.path_parameters)
+
         self.stage_variables: dict = event.get("stageVariables")
         if self.stage_variables is None:
             self.stage_variables = {}
+
         self.request_context: dict = event.get("requestContext")
         if self.request_context is None:
             self.request_context = {}
+
         if type(event.get("body")) is str:
             try:
                 self.body = json.loads(event.get("body"))
@@ -38,7 +53,13 @@ class Event:
                 self.body = None
         else:
             self.body = None
+
         self.is_base_64_encoded: bool = event.get("isBase64Encoded")
+
+    @staticmethod
+    def _unquote_dict_items(dict_: Dict[Any, str]):
+        for key in dict_:
+            dict_[key] = urllib.parse.unquote(dict_[key])
 
 
 # TODO mapping for Lambda context

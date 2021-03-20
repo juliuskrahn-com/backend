@@ -1,31 +1,32 @@
 import unittest
 import backend.middleware as middleware
-import tests.data as data
+import tests.unit.middleware.testing_data as data
+from tests.utils import get_admin_key
 import pydantic
 import json
-import boto3
-import functools
 
 
 class TestMiddlewareCore(unittest.TestCase):
 
     def test_event(self):
-        event = middleware.Event(data.raw_event)
-        self.assertEqual(event.ressource, data.raw_event["resource"])
-        self.assertEqual(event.path, data.raw_event["path"])
-        self.assertEqual(event.method, data.raw_event["httpMethod"])
-        self.assertEqual(event.request_context, data.raw_event["requestContext"])
-        self.assertEqual(event.headers, data.raw_event["headers"])
-        self.assertEqual(event.multi_value_headers, data.raw_event["multiValueHeaders"])
+        event = middleware.Event(data.middleware_raw_event)
+        self.assertEqual(event.ressource, data.middleware_raw_event["resource"])
+        self.assertEqual(event.path, data.middleware_raw_event["path"])
+        self.assertEqual(event.method, data.middleware_raw_event["httpMethod"])
+        self.assertEqual(event.request_context, data.middleware_raw_event["requestContext"])
+        self.assertEqual(event.headers, data.middleware_raw_event["headers"])
+        self.assertEqual(event.multi_value_headers, data.middleware_raw_event["multiValueHeaders"])
         self.assertEqual(event.query_string_parameters, {})
         self.assertEqual(event.multi_value_query_string_parameters, {})
-        self.assertEqual(event.path_parameters, data.raw_event["pathParameters"])
+        self.assertEqual(event.path_parameters, data.middleware_raw_event["pathParameters"])
         self.assertEqual(event.stage_variables, {})
         self.assertEqual(event.body, {"key": "1234", "profile": {"email": "peter@email.com"}})
         self.assertEqual(event.is_base_64_encoded, None)
 
         event_body_was_none = middleware.Event({"body": None})
-        self.assertEqual(event_body_was_none.body, {})
+        self.assertEqual(event_body_was_none.body, None)
+        event_body_was_invalid = middleware.Event({"body": "fsdfsdf"})
+        self.assertEqual(event_body_was_invalid.body, None)
 
     def test_response(self):
         default_response = middleware.Response()
@@ -74,11 +75,11 @@ class TestMiddlewareCore(unittest.TestCase):
         @middleware.middleware
         def handler(event: middleware.Event, context):
             nonlocal self, dummy
-            self.assertEqual(event.path, data.raw_event["path"])
+            self.assertEqual(event.path, data.middleware_raw_event["path"])
             self.assertEqual(context, dummy)
             return middleware.Response()
 
-        response = handler(data.raw_event, dummy)
+        response = handler(data.middleware_raw_event, dummy)
         self.assertEqual(response["statusCode"], 200)
 
 
@@ -86,14 +87,14 @@ class TestMiddlewareAuthentication(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.raw_event_wrong_admin_key = {**data.raw_event, "body": '{"key": "test"}'}
-        self.raw_event_right_admin_key = {**data.raw_event,
-                                          "body": json.dumps({"key": self.get_admin_key()})}
+        self.raw_event_wrong_admin_key = {**data.middleware_raw_event, "body": '{"key": "test"}'}
+        self.raw_event_right_admin_key = {**data.middleware_raw_event,
+                                          "body": json.dumps({"key": get_admin_key()})}
 
     def test_authenticator(self):
         with self.assertRaises(ValueError):
             print(middleware.authenticator.current_user_is_admin)
-        admin_key = self.get_admin_key()
+        admin_key = get_admin_key()
         middleware.authenticator.register("test")
         self.assertFalse(middleware.authenticator.current_user_is_admin)
         middleware.authenticator.register(admin_key)
@@ -107,7 +108,7 @@ class TestMiddlewareAuthentication(unittest.TestCase):
         @middleware.register_user
         def handler(event: middleware.Event, context):
             nonlocal self, dummy
-            self.assertEqual(event.path, data.raw_event["path"])
+            self.assertEqual(event.path, data.middleware_raw_event["path"])
             self.assertEqual(context, dummy)
             self.assertFalse(middleware.authenticator.current_user_is_admin)
 
@@ -129,23 +130,13 @@ class TestMiddlewareAuthentication(unittest.TestCase):
         @middleware.admin_guard
         def handler(event: middleware.Event, context):
             nonlocal self, dummy
-            self.assertEqual(event.path, data.raw_event["path"])
+            self.assertEqual(event.path, data.middleware_raw_event["path"])
             self.assertEqual(context, dummy)
             self.assertTrue(middleware.authenticator.current_user_is_admin)
             return context
 
         response = handler(middleware.Event(self.raw_event_right_admin_key), dummy)
         self.assertEqual(response, dummy)
-
-    @staticmethod
-    @functools.cache
-    def get_admin_key():
-        session = boto3.session.Session()
-        client = session.client(
-            service_name='secretsmanager',
-            region_name="us-east-1"
-        )
-        return client.get_secret_value(SecretId="blog-backend-admin-key")['SecretString']
 
     def setUp(self):
         self.reset_authenticator()
@@ -170,14 +161,14 @@ class TestMiddlewareDataDecorator(unittest.TestCase):
             self.assertEqual(event_data.profile, {"email": "peter@email.com"})
             return context
 
-        response = handler(middleware.Event(data.raw_event), dummy)
+        response = handler(middleware.Event(data.middleware_raw_event), dummy)
         self.assertEqual(response, dummy)
 
     def test_data_decorator_unsuccessful(self):
         @middleware.data(self.Model)
         def handler(event: middleware.Event, context, event_data):
             self.fail("Handler executed")
-        raw_event = {**data.raw_event, "body": '{"data": "nonsense"}'}
+        raw_event = {**data.middleware_raw_event, "body": '{"data": "nonsense"}'}
         response: middleware.Response = handler(middleware.Event(raw_event), None)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.error_messages[0][0], "Request validation failed (pydantic error)")

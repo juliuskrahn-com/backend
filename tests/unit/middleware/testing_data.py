@@ -1,4 +1,4 @@
-raw_event = {
+middleware_raw_event = {
     "resource": "/",
     "path": "/",
     "httpMethod": "GET",

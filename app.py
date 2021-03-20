@@ -8,7 +8,7 @@ env = core.Environment(account="473883619336", region="us-east-1")
 
 app = core.App()
 
-stacks.Production(app, "production", env=env)
-stacks.Testing(app, "testing", env=env)
+stacks.Production(app, "Production", env=env)
+stacks.Testing(app, "Testing", env=env)
 
 app.synth()

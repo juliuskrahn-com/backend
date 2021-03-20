@@ -4,10 +4,10 @@ import aws_cdk.aws_lambda as lambda_
 import aws_cdk.aws_dynamodb as dynamodb
 import aws_cdk.aws_secretsmanager as sm
 import aws_cdk.aws_logs as logs
-from ..constants import Environment
+from .. import Environment
 
 
-class API(aws_cdk.core.Construct):
+class Api(aws_cdk.core.Construct):
 
     def __init__(
             self, scope: aws_cdk.core.Construct,
@@ -21,19 +21,19 @@ class API(aws_cdk.core.Construct):
         #
         #   (applied to integrations auto., accessed by integration construct via scope)
 
-        self.table_article_name = construct_id + "article"
-        self.table_comment_name = construct_id + "comment"
+        self.table_article_name = construct_id + "Article"
+        self.table_comment_name = construct_id + "Comment"
 
         self.lambda_layers = [
             lambda_.LayerVersion(
                 self,
-                "middleware.layer",
+                "MiddlewareLayer",
                 code=lambda_.Code.from_asset("build/middleware_layer"),
                 compatible_runtimes=[lambda_.Runtime.PYTHON_3_8]
             ),
             lambda_.LayerVersion(
                 self,
-                "vendor.layer",
+                "VendorLayer",
                 code=lambda_.Code.from_asset("build/vendor_layer"),
                 compatible_runtimes=[lambda_.Runtime.PYTHON_3_8]
             )
@@ -49,7 +49,7 @@ class API(aws_cdk.core.Construct):
 
         table_article = dynamodb.Table(
             self,
-            "article.table",
+            "ArticleTable",
             table_name=self.table_article_name,
             partition_key=dynamodb.Attribute(name="urlTitle", type=dynamodb.AttributeType.STRING),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -68,7 +68,7 @@ class API(aws_cdk.core.Construct):
 
         table_comment = dynamodb.Table(
             self,
-            "comment.table",
+            "CommentTable",
             table_name=self.table_comment_name,
             partition_key=dynamodb.Attribute(name="articleUrlTitle", type=dynamodb.AttributeType.STRING),
             sort_key=dynamodb.Attribute(name="id", type=dynamodb.AttributeType.STRING),
@@ -81,7 +81,7 @@ class API(aws_cdk.core.Construct):
 
         self.instance = apigw.RestApi(
             self,
-            "api",
+            construct_id + "I",
             default_cors_preflight_options=apigw.CorsOptions(
                 allow_origins=apigw.Cors.ALL_ORIGINS,
                 allow_methods=apigw.Cors.ALL_METHODS,
@@ -184,10 +184,10 @@ class API(aws_cdk.core.Construct):
 
 class APIIntegration(apigw.LambdaIntegration):
 
-    def __init__(self, scope: API, name: str):
+    def __init__(self, scope: Api, name: str):
         self.lambda_function = lambda_.Function(
             scope,
-            f"{snake_case_to_camel_case(name)}.fn",
+            f"{snake_case_to_camel_case(name)}Fn",
             runtime=lambda_.Runtime.PYTHON_3_8,
             handler=f"lambda_function.handler",
             code=lambda_.Code.from_asset(f"backend/lambda_functions/{name}"),
@@ -206,5 +206,5 @@ class APIIntegration(apigw.LambdaIntegration):
 
 
 def snake_case_to_camel_case(string):
-    string = "".join(word.title() for word in string.split("_"))
-    return string[:1].lower() + string[1:] if string else ""
+    # UpperCamelCase
+    return "".join(word.title() for word in string.split("_"))

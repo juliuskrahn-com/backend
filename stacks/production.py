@@ -3,8 +3,8 @@ import aws_cdk.aws_apigateway as apigw
 import aws_cdk.aws_certificatemanager as cm
 import aws_cdk.aws_route53 as route53
 import aws_cdk.aws_route53_targets as route53_targets
-from .constructs import API
-from .constants import Environment
+from .constructs import Api
+from . import Environment
 
 
 class Production(core.Stack):
@@ -12,18 +12,18 @@ class Production(core.Stack):
     def __init__(self, scope: core.Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        core.Tags.of(self).add("project", "blog.backend")
-        core.Tags.of(self).add("stack", "production")
+        core.Tags.of(self).add("Project", "BlogBackend")
+        core.Tags.of(self).add("Stack", "Production")
 
         # API
 
-        api = API(self, "api", environment=Environment.PRODUCTION)
+        api = Api(self, "ProductionApi", environment=Environment.PRODUCTION)
 
         # API domain name
 
         api_domain_name = apigw.DomainName(
             self,
-            "api.domainName",
+            "ApiDomainName",
             domain_name="api.juliuskrahn.com",
             certificate=cm.Certificate.from_certificate_arn(
                 self,
@@ -37,7 +37,7 @@ class Production(core.Stack):
 
         route53.ARecord(
             self,
-            "api.aRecord",
+            "ApiARecord",
             record_name="api",
             target=route53.RecordTarget.from_alias(route53_targets.ApiGatewayDomain(api_domain_name)),
             zone=route53.HostedZone.from_lookup(self, "blog-hosted-zone", domain_name="juliuskrahn.com")

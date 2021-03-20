@@ -4,7 +4,7 @@ info:
   description: |
     [GitHub](https://github.com/juliuskrahn-com/backend).
     For operations with the tag 'Admin', the admin key has to be included in the request body ('key').
-    CORS is enabled.
+    CORS is enabled. Don't forget to escape the comment id/ resp id.
   version: 1.0.0
 servers:
 - url: https://api.juliuskrahn.com

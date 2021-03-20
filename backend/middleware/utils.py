@@ -119,8 +119,8 @@ def wrap_boto3_dynamodb_table(table):
             key = None
             while True:
                 response = fn(*args, **kwargs, ExclusiveStartKey=key)
-                if "items" in response:
-                    items += response["items"]
+                if "Items" in response:
+                    items += response["Items"]
                 if "LastEvaluatedKey" in response:
                     key = response["LastEvaluatedKey"]
                     continue

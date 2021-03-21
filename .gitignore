@@ -1,7 +1,6 @@
 .idea
 
 build
-cdk.context.json
 
 *.swp
 package-lock.json

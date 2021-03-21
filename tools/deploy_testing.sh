@@ -1,5 +1,5 @@
 #!/bin/bash
-# working dir has to be project root
+# run in project root dir
 
 cdk synth testing
 cdk deploy testing

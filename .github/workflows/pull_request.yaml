@@ -1,0 +1,25 @@
+name: Pull request
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  unittests:
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Set up application
+        run: bash tools/setup.sh
+
+      - name: Run middleware unittests
+        run: python -m unittest test/unit/middleware

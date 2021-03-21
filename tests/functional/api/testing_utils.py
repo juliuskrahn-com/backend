@@ -1,20 +1,14 @@
-import os
 import requests
 import json
 from tests.utils import get_admin_key
 from tests.functional.api.testing_data import generate_article_data
+from tools.get_testing_api_endpoint import get_testing_api_endpoint
 from typing import List
-import logging
 
 
-environment = os.environ.get("Environment")
-
-if environment == "Testing":
-    logging.info("Test Testing Environment Endpoints")
-    base_url = "https://testing.api.juliuskrahn.com"
-else:
-    logging.info("Test Production Environment Endpoints")
-    base_url = "https://api.juliuskrahn.com"
+base_url = get_testing_api_endpoint()
+if not base_url:
+    raise ValueError(f"Invalid base url: {base_url}")
 
 
 def create_articles(overwrite=None, n=3):

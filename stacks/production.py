@@ -15,11 +15,7 @@ class Production(core.Stack):
         core.Tags.of(self).add("Project", "BlogBackend")
         core.Tags.of(self).add("Stack", "Production")
 
-        # API
-
-        api = Api(self, "ProductionApi", environment=Environment.PRODUCTION)
-
-        # API domain name
+        api = Api(self, f"{construct_id}Api", environment=Environment.PRODUCTION)
 
         api_domain_name = apigw.DomainName(
             self,

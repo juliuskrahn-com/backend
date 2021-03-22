@@ -3,4 +3,4 @@
 
 env_id="$(python tools/get_testing_env_id.py)"
 
-cdk destroy "Testing${env_id}" --force
+npx cdk destroy "Testing${env_id}" --force

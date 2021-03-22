@@ -3,4 +3,4 @@
 
 env_id="$(python tools/set_testing_env_id.py)"
 
-cdk deploy "Testing${env_id}" --require-approval=never --outputs-file build/deploy_testing_output.json
+npx cdk deploy "Testing${env_id}" --require-approval=never --outputs-file build/deploy_testing_output.json

@@ -25,11 +25,6 @@ jobs:
       - name: Set up application
         run: bash tools/setup.sh
 
-      - name: Run middleware unittests
-        run: python -m unittest tests.unit.middleware
-
-      - uses: actions/setup-node@v1
-
       - name: Setup AWS CLI + credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -37,7 +32,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-2
 
-      - name: Install AWS CDK
+      - name: Run middleware unittests
+        run: python -m unittest tests.unit.middleware
+
+      - name: Install AWS CDK  # node is installed by aws cli action
         run: npm install -g aws-cdk
 
       - name: Deploy to testing environment

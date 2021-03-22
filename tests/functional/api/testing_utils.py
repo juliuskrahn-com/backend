@@ -4,17 +4,12 @@ import json
 from tests.utils import get_admin_key
 from tests.functional.api.testing_data import generate_article_data
 from typing import List
-import logging
 
 
-environment = os.environ.get("Environment")
+base_url = os.environ.get("Endpoint")
 
-if environment == "Testing":
-    logging.info("Test Testing Environment Endpoints")
-    base_url = "https://testing.api.juliuskrahn.com"
-else:
-    logging.info("Test Production Environment Endpoints")
-    base_url = "https://api.juliuskrahn.com"
+if not base_url:
+    raise ValueError("Endpoint (env var) not set")
 
 
 def create_articles(overwrite=None, n=3):

@@ -5,6 +5,7 @@ import aws_cdk.aws_dynamodb as dynamodb
 import aws_cdk.aws_secretsmanager as sm
 import aws_cdk.aws_logs as logs
 from .. import Environment
+from stacks.stack_utils import to_camel_case
 
 
 class Api(aws_cdk.core.Construct):
@@ -187,7 +188,7 @@ class APIIntegration(apigw.LambdaIntegration):
     def __init__(self, scope: Api, name: str):
         self.lambda_function = lambda_.Function(
             scope,
-            f"{snake_case_to_camel_case(name)}Fn",
+            f"{to_camel_case(name)}Fn",
             runtime=lambda_.Runtime.PYTHON_3_8,
             handler=f"lambda_function.handler",
             code=lambda_.Code.from_asset(f"backend/lambda_functions/{name}"),
@@ -203,8 +204,3 @@ class APIIntegration(apigw.LambdaIntegration):
             handler=self.lambda_function
         )
         scope.secret_admin_key.grant_read(self.lambda_function)
-
-
-def snake_case_to_camel_case(string):
-    # UpperCamelCase
-    return "".join(word.title() for word in string.split("_"))

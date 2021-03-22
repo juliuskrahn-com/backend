@@ -1,0 +1,51 @@
+name: Test
+
+on:
+  pull_request:
+    branches:
+      - "main"
+  push:
+    branches:
+      - "**"
+      - "!main"
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Set up application
+        run: bash tools/setup.sh
+
+      - name: Run middleware unittests
+        run: python -m unittest tests.unit.middleware
+
+      - uses: actions/setup-node@v1
+
+      - name: Setup AWS CLI + credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Install AWS CDK
+        run: npm install -g aws-cdk
+
+      - name: Deploy to testing environment
+        run: bash tools/deploy_testing.sh
+
+      - name: Run testing environment (api) functional tests
+        run: Endpoint="$(python tools/get_testing_api_endpoint)" bash -c "python -m unittest tests.functional.api"
+
+      - name: Destroy testing environment
+        if: ${{ always() }}
+        run: bash tools/destroy_testing.sh

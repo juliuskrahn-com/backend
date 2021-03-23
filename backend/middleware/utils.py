@@ -5,6 +5,7 @@ from pydantic import ValidationError
 import boto3
 import os
 import logging
+import json
 
 
 class Authenticator:
@@ -23,8 +24,8 @@ class Authenticator:
             service_name='secretsmanager',
             region_name="us-east-1"
         )
-        resp = client.get_secret_value(SecretId="blog-backend-admin-key")
-        return resp['SecretString']
+        string = client.get_secret_value(SecretId="blog-backend-admin-key")['SecretString']
+        return json.loads(string)["blog-backend-admin-key"]
 
     def register(self, key):
         """Sets the admin status (bool) of the current user by comparing the user's key"""

@@ -15,4 +15,4 @@ class Testing(core.Stack):
 
         api = Api(self, f"{construct_id}Api", environment=Environment.TESTING)
 
-        core.CfnOutput(self, "ApiIEndpoint", value=api.instance.url)
+        core.CfnOutput(self, "ApiIEndpoint", value=api.instance.url)  # I -> Instance

@@ -13,7 +13,7 @@ class Api(aws_cdk.core.Construct):
     def __init__(
             self, scope: aws_cdk.core.Construct,
             construct_id: str,
-            environment: object = Environment.TESTING):
+            environment: object = Environment.PRODUCTION):
         super().__init__(scope, construct_id)
 
         # Integration dependencies
@@ -82,7 +82,7 @@ class Api(aws_cdk.core.Construct):
 
         self.instance = apigw.RestApi(
             self,
-            construct_id + "I",
+            construct_id + "I",  # I -> Instance
             default_cors_preflight_options=apigw.CorsOptions(
                 allow_origins=apigw.Cors.ALL_ORIGINS,
                 allow_methods=apigw.Cors.ALL_METHODS,
@@ -91,13 +91,8 @@ class Api(aws_cdk.core.Construct):
             deploy_options=apigw.StageOptions(
                 throttling_rate_limit=256,
                 throttling_burst_limit=64,  # concurrent
-                caching_enabled=True if environment is Environment.PRODUCTION else False,
-                cache_ttl=aws_cdk.core.Duration.minutes(5)
             ),
-            endpoint_configuration=apigw.EndpointConfiguration(
-                types=[apigw.EndpointType.EDGE] if environment is Environment.PRODUCTION
-                else [apigw.EndpointType.REGIONAL]
-            ),
+            endpoint_configuration=apigw.EndpointConfiguration(types=[apigw.EndpointType.REGIONAL]),
         )
 
         # Endpoints

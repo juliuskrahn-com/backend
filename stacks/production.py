@@ -26,7 +26,7 @@ class Production(core.Stack):
                 "blog-api-domain-name-certificate",
                 "arn:aws:acm:us-east-1:473883619336:certificate/1ad12871-4b46-44ef-a24d-7af5ac43972b"
             ),
-            endpoint_type=apigw.EndpointType.EDGE
+            endpoint_type=apigw.EndpointType.REGIONAL
         )
 
         api_domain_name.add_base_path_mapping(api.instance)

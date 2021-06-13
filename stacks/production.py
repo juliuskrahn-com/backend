@@ -12,8 +12,8 @@ class Production(core.Stack):
     def __init__(self, scope: core.Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        core.Tags.of(self).add("Project", "BlogBackend")
-        core.Tags.of(self).add("Stack", "Production")
+        core.Tags.of(self).add("Project", "JuliusKrahnBlogBackend")
+        core.Tags.of(self).add("Environment", "Production")
 
         api = Api(self, f"{construct_id}Api", environment=Environment.PRODUCTION)
 

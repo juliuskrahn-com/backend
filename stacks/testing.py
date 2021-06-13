@@ -10,8 +10,8 @@ class Testing(core.Stack):
         construct_id += get_testing_env_id()
         super().__init__(scope, construct_id, **kwargs)
 
-        core.Tags.of(self).add("Project", "BlogBackend")
-        core.Tags.of(self).add("Stack", "Testing")
+        core.Tags.of(self).add("Project", "JuliusKrahnBlogBackend")
+        core.Tags.of(self).add("Environment", "Testing")
 
         api = Api(self, f"{construct_id}Api", environment=Environment.TESTING)
 

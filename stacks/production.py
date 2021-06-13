@@ -24,7 +24,7 @@ class Production(core.Stack):
             certificate=cm.Certificate.from_certificate_arn(
                 self,
                 "blog-api-domain-name-certificate",
-                "arn:aws:acm:us-east-1:473883619336:certificate/1ad12871-4b46-44ef-a24d-7af5ac43972b"
+                "arn:aws:acm:eu-central-1:473883619336:certificate/4e5cacb4-f88b-45c3-abea-ce543b125499"
             ),
             endpoint_type=apigw.EndpointType.REGIONAL
         )
